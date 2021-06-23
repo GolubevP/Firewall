@@ -1,0 +1,5 @@
+#Попытки автоматизировать настроку файрвола windows
+#включаем firewall
+Set-NetFirewallProfile -All -Enabled True
+#Сбрасываем настройки на дефолтные
+(New-Object -ComObject HNetCfg.FwPolicy2).RestoreLocalFirewallDefaults()
