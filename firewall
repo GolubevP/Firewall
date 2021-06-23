@@ -1,5 +1,19 @@
-#Попытки автоматизировать настроку файрвола windows
-#включаем firewall
-Set-NetFirewallProfile -All -Enabled True
-#Сбрасываем настройки на дефолтные
+#включаем удаленный рабочий стол
+Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -name "fDenyTSConnections" -value 0
+#меняем порт по умолчанию
+Set-ItemProperty -Path "HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp\" -Name PortNumber -Value 4017
+#сбрасываем все настройки файрвола на дефолтные
 (New-Object -ComObject HNetCfg.FwPolicy2).RestoreLocalFirewallDefaults()
+#включаем файрвол для всех профилей
+Set-NetFirewallProfile -All -Enabled True
+#открываем входящих порт рдп 4017
+New-NetFirewallRule -DisplayName "AllowRDP" -Direction Inbound -Protocol TCP –LocalPort 4017 -Action Allow
+#разрешаем подлючения к удаленному рабочему столу только с определенных ip
+$name = Get-NetFirewallRule -DisplayName "*AllowRDP*"
+$ip = @("192.168.10.23", "192.168.10.24", "192.168.10.0/24")
+    foreach ($r in $name)
+    {
+        Set-NetFirewallRule -DisplayName $r.DisplayName -RemoteAddress $ip
+    }
+#откываем порт для zabbix для офисного ip
+New-NetFirewallRule -DisplayName "AllowZabbix" –RemoteAddress 176.108.65.166 -Direction Inbound -Protocol TCP –LocalPort 10050 -Action Allow
